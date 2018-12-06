@@ -9,7 +9,7 @@ from scipy.interpolate import interp1d
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
-from IAST import InterpolatorIsotherm
+from pyiast import InterpolatorIsotherm
 
 
 def ConstructInterpolatorIsothermAtTnew(df, T0, Tnew, loading_key=None, pressure_key=None, hoa_key=None, fill_value=None):
@@ -31,7 +31,7 @@ def ConstructInterpolatorIsothermAtTnew(df, T0, Tnew, loading_key=None, pressure
         raise Exception("Pass loading_key, hoa_key, and pressure_key, names of loading, heat of adsorption, and pressure cols in DataFrame.")
     if pressure_key == 'new_P':
         raise Exception("Change pressure column to something new plz")
-    
+
     # for every point, shift pressures according to Classius-Clapyeron eqn
     R = 8.314 / 1000.0 # kJ/mol-K
     n = df.shape[0]
