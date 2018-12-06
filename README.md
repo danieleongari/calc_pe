@@ -8,19 +8,13 @@ Instructions on how to download the program can be found here: http://pyiast.rea
 
 Link to the Github page: https://github.com/CorySimon/pyIAST.
 
+# Input and run
 
-2. To run the program, enter the following command into the command line:
+To run the program, enter the following command into the command line:
 
 ```shell
 ./improved_calPE.py coreDB.yml ABAVIJ coal IAST IAST
 ```
-* `improved_calPE.py` is program to calculate the parasitic energy
-* `coreDB.yml` is the database
-* `ABAVIJ` is the name of the structure for which you want to calculate the parasitic energy
-* `coal` is the composition of the gas (alt. `NG`)
-* `IAST` is the mixed-gas model
-* `IAST` is the name of the dictionary key in the database
-
 * `improved_calPE.py` is program to calculate the parasitic energy
 * `coreDB.yml` is the database
 * `ABAVIJ` is the name of the structure for which you want to calculate the parasitic energy
