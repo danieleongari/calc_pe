@@ -5,7 +5,6 @@ from datetime import datetime
 import pyiast # requires python 3
 import numpy
 import utils
-from fnmatch import fnmatch
 from glob import glob
 import pandas as pd
 
@@ -116,14 +115,14 @@ def main(args):
     dH = {'CO_2': [-1, -1], 'N_2':[-1, -1]}
     if args.comp == 'coal':
         totE = 6631.2
-        pCO2 = 1.80
+        pCO2 = 1.80 # kg_CO2/kg_coal (10.1039/C4EE02636E, SI, pag. 6)
         ya = 0.14
         Ta = 313.0
         Pa = 101325.0
         Td_min = 333.0
     elif args.comp == 'NG':
         totE = 21023.26
-        pCO2 = 3.23
+        pCO2 = 3.23 # kg_CO2/kg_NG (10.1039/C4EE02636E, SI, pag. 6)
         ya = 0.04
         Ta = 313.0
         Pa = 101325.0
