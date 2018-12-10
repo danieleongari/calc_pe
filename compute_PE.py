@@ -4,7 +4,7 @@ import sys, math, argparse, logging, os
 from datetime import datetime
 import pyiast # requires python 3
 import numpy
-import ccsdb, utils
+import utils
 from fnmatch import fnmatch
 from glob import glob
 import pandas as pd
