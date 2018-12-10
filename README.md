@@ -1,12 +1,20 @@
-# Compute the Parasitic Energy for CO2 separation
+# Compute the Parasitic Energy for CO<sub>2</sub> separation
 
-### Installation
+### References
+* [Evaluating different classes of porous materials for carbon capture (2014)](http://xlink.rsc.org/?DOI=C4EE02636E)
+* [In silico screening of carbon-capture materials (2012)](http://dx.doi.org/10.1038/nmat3336)
 
-To use improved_calPE.py, you will first have to install the pyIAST python package.
+### Authors 
+* Johanna M. Huck
+* Li-Chiang Lin
+* Cory M. Simon
+* Adam Berger
 
-Instructions on how to download the program can be found here: http://pyiast.readthedocs.io/en/latest/.
+### Dependencies
 
-Link to the Github page: https://github.com/CorySimon/pyIAST.
+* [pyIAST](https://github.com/CorySimon/pyIAST)
+* numpy
+* pandas
 
 # Input and run
 
