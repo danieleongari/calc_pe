@@ -9,20 +9,11 @@ from fnmatch import fnmatch
 from glob import glob
 import pandas as pd
 
-dH = {}
-qa = {}
-kqv = {}
-wcvf_a = {} # mol of CO2 per kg of adsorbent, during adsorption (from ideal gas law)
-iso_ta = {}
-iso_df = {}
-T_df = {}
-iso_td = {}
-
 def wcvf(y, T, P):
-  """ Compute the wcvf considering the ideal gas law """
+  """ Compute the mol of CO2 per kg of adsorbent (wcvf) considering the ideal gas law """
   return P * y * vf / (utils.R * T * ms)
 
-def totalQ(db, struc, Td, Pd):
+def totalQ(struc, Td, Pd):
   """ Q_{thermal} computed from eq. 1 in 10.1039/c4ee02636e """
   global ya, yd, qa, wct
   # extract or compute the adsorption conditions if not already stored
@@ -32,12 +23,14 @@ def totalQ(db, struc, Td, Pd):
     if model == 'IAST':
       qa['CO_2'], qa['N_2'] = pyiast.iast(
                                       numpy.array([ya, 1-ya]) * Pa,
-                                      [iso_ta['CO_2'],
-                                      iso_ta['N_2']],
+                                      [iso_Ta['CO_2'],
+                                      iso_Ta['N_2']],
                                       verboseflag=False,
                                      )
       logging.debug("qa['CO_2']: %r, qa['N_2']: %r" % (qa['CO_2'], qa['N_2']))
     elif model == 'COMP':
+        kqv = {'CO_2':[1, 0, 0, 1, 1, 0, 0, 1],
+               'N_2': [1, 0, 0, 1, 1, 0, 0, 1]}
         qa['CO_2'], qa['N_2'] = utils.compQ(Ta, Pa, kqv, ya, dH)
         logging.debug("qa['CO_2']: %r, qa['N_2']: %r" % (qa['CO_2'], qa['N_2']))
   # Compute desorption conditions
@@ -48,8 +41,8 @@ def totalQ(db, struc, Td, Pd):
   if model == 'IAST':
     qd['CO_2'], qd['N_2'] = pyiast.iast(
                                     numpy.array([yd, 1-yd]) * Pd,
-                                    [iso_td['CO_2'],
-                                    iso_td['N_2']],
+                                    [iso_Td['CO_2'],
+                                    iso_Td['N_2']],
                                     verboseflag=False,
                                     adsorbed_mole_fraction_guess=[0.99999999, 0.00000001]
                                    )
@@ -89,9 +82,9 @@ def totalW(Pd, pur):
     Wt = Wp*(1+mpr*(1./pur-1))
     return Wt
 
-def totalPE(db, struc, Td, Pd):
+def totalPE(struc, Td, Pd):
   """ Total PE, computed from eq. 2 in 10.1039/c4ee02636e (method = 'carnot') """
-  Qt, pur, m1, wct, Qs, Qd = totalQ(db, struc, Td, Pd) # Compute mainly the PE and CO2 purity
+  Qt, pur, m1, wct, Qs, Qd = totalQ(struc, Td, Pd) # Compute mainly the PE and CO2 purity
   if Qt < 0: return -1, -1, -1, -1, -1, -1, -1, -1, -1
   Wt = totalW(Pd, pur) # Compute compression work
   logging.debug("Wt = %f" % Wt)
@@ -110,10 +103,9 @@ def totalPE(db, struc, Td, Pd):
   return PE, Qteff, Wt, m1, wct, Qs, Qd, pur, Qt
 
 def main(args):
-    global cp, ms, ya, yd, Ta, Pa, dH, vf, gas, model, kqv, totE, pCO2, method
-    global iso_ta, iso_df, T_df, iso_td
+    global cp, ms, ya, yd, Ta, Pa, dH, vf, gas, model, totE, pCO2, method
+    global iso_Ta, iso_df, T_df, iso_Td, qa, wcvf_a
     # Read parameters
-    db = ccsdb.load(args.db)
     model = args.model
     method = args.method
     vf = args.vf
@@ -121,7 +113,7 @@ def main(args):
     yd = args.yd
     ms = args.rho * ( 1. - vf ) # Mass (kg) of adsorbent in per m3 of bed
     logging.debug('ms = %f' %  ms)
-    dH['CO_2'], dH['N_2'] = ccsdb.getHoAs(db, args.struc)
+    dH = {'CO_2': [-1, -1], 'N_2':[-1, -1]}
     if args.comp == 'coal':
         totE = 6631.2
         pCO2 = 1.80
@@ -141,14 +133,16 @@ def main(args):
         Ta = 288.0
         Pa = 101325.0
         Td_min = 308.0
-    for m in ccsdb.getAdsorbates(db, args.struc):
-        kqv[m] = ccsdb.getAdsorbate(db, args.struc, m).get('kq300')
+    T_df = {}
+    iso_df = {}
+    iso_Ta = {}
+    for m in ['CO_2','N_2']:
         df_dir = os.path.join(args.datapath, args.struc, m) # dir containing isotherms
         df_file = glob(os.path.join(df_dir, '*.csv'))[0] # .csv files for the isotherms
         T_df[m] = int(os.path.splitext(os.path.basename(df_file))[0][:-1]) # temperature of the isotherms
         iso_df[m] = pd.read_csv(df_file, sep=' ') #values of the isotherm
         # Extrapolate the pure-component isotherm at Ta
-        iso_ta[m], _ = utils.ConstructInterpolatorIsothermAtTnew(
+        iso_Ta[m], _ = utils.ConstructInterpolatorIsothermAtTnew(
                               iso_df[m], T_df[m], Ta,
                               loading_key="loading(mol/kg)",
                               pressure_key="pressure(Pa)",
@@ -172,10 +166,13 @@ def main(args):
         Pd_range = numpy.arange(Pd_min,Pd_max,Pd_step)
     # Compute the PE at different Td, Pd
     data = [] # collect all the data at different Pd, Td
+    iso_Td = {}
+    qa = {}
+    wcvf_a = {}
     for Td in Td_range:
-        for m in ccsdb.getAdsorbates(db, args.struc):
+        for m in ['CO_2','N_2']:
             # Extrapolate the pure-component isotherm at Td
-            iso_td[m], _ = utils.ConstructInterpolatorIsothermAtTnew(
+            iso_Td[m], _ = utils.ConstructInterpolatorIsothermAtTnew(
                                  iso_df[m], T_df[m], Td,
                                  loading_key="loading(mol/kg)",
                                  pressure_key="pressure(Pa)",
@@ -183,7 +180,7 @@ def main(args):
                                  fill_value=iso_df[m]["loading(mol/kg)"].max())
         for Pd in Pd_range:
             # Compute the PE @ Td and Pd
-            PE, Cap, Comp, MProd, wct, Qs, Qd, pur, Qt = totalPE(db, args.struc, float(Td), Pd)
+            PE, Cap, Comp, MProd, wct, Qs, Qd, pur, Qt = totalPE(args.struc, Td, Pd)
             logging.debug("Td=%r, Pd=%r, PE=%r" %(Td, Pd, PE))
             if PE > 0: #Needed because errors give negative PE
                 data.append([Td, Pd, PE, Cap, Comp, MProd, wct, Qs, Qd, pur, Qt])
@@ -210,8 +207,6 @@ def main(args):
     finPE_id = [finPE, finP, finT, finEL, finCap, finComp, finMProd, finWC, finPur]
     logging.debug("%s %r" %  (args.struc, finPE_id))
     print (args.struc, finPE_id)
-    #ccsdb.writePEs(db, str(args.struc), str(args.comp), str(args.limit), finPE_id)
-    ccsdb.dump(db, args.db)
     # END of main
 
 if __name__ == "__main__":
@@ -275,12 +270,6 @@ if __name__ == "__main__":
           dest="datapath",
           default="./ccsdata/",
           help="Path containing the isotherms in .csv format (default: ./ccsdata)")
-  parser.add_argument(
-          "-db",
-          type=str,
-          dest="db",
-          default="./ccsdata.yml",
-          help="Database .yml file containing input data (default: ./ccsdata.yml)")
   parser.add_argument(
          "-l",
          "--log",

@@ -18,15 +18,9 @@ Use `--log` for printing the debug log file.
 
 * The isotherm data should be put in the `ccsdata/{structure_name}` folder
 
-* The temperature at which the isotherm data is calculated is automatically read from the
-filename `ccsdata/{structure_name}/{adsorbate_name}/{temperature}.csv`
+* The temperature at which the isotherm data is calculated is automatically
+read from the filename `ccsdata/{structure_name}/{adsorbate_name}/{temperature}.csv`
 
-* Make sure to specify the `{structure_name}` in the coreDB.yml file:
-```
-Structures:
-  {structure_name}
-    Adsorbates:
-```
 ### Output
 
 In the output, the program prints:
