@@ -1,10 +1,8 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
 import sys, math, argparse, logging, os
 from datetime import datetime
-import pyiast # requires python 3
-import numpy
-import ccsdb, utils, deltaT
+import ccsdb, pyiast, numpy, utils, deltaT
 from fnmatch import fnmatch
 from glob import glob
 import pandas as pd
@@ -57,7 +55,7 @@ def totalQ(db, struc, Td, Pd):
       )
       logging.debug(
           "qa['CO_2']: %r, qa['N_2']: %r" % (
-	    qa['CO_2'], qa['N_2']
+	    qa['CO_2'], qa['N_2']           
               #, qas['CO_2']: %r, qas['N_2'], qas['CO_2'], qas['N_2']
 	    )
 	  )

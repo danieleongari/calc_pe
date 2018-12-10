@@ -1,4 +1,4 @@
-# How to calculate the Parasitic Energy
+# Compute the Parasitic Energy for CO2 separation
 
 ### Installation
 
@@ -10,17 +10,9 @@ Link to the Github page: https://github.com/CorySimon/pyIAST.
 
 # Input and run
 
-To run the program, enter the following command into the command line:
+See the `--help` for the input description.
 
-```shell
-./improved_calPE.py coreDB.yml ABAVIJ coal IAST IAST
-```
-* `improved_calPE.py` is program to calculate the parasitic energy
-* `coreDB.yml` is the database
-* `ABAVIJ` is the name of the structure for which you want to calculate the parasitic energy
-* `coal` is the composition of the gas (alt. `NG`)
-* `IAST` is the mixed-gas model
-* `IAST` is the name of the dictionary key in the database
+Use `--log` for printing the debug log file.
 
 #### NB:
 
@@ -37,19 +29,19 @@ Structures:
 ```
 ### Output
 
-The output you get should look like something like this:
+In the output, the program prints:
 
-```shell
-ABAVIJ [914.4198, 2026.5, 333.0, 0.248214, 192.9399, 721.48,43.1682, 0.98971, 0.924254]
-```
+* the name of the structure
+* the parasitic energy (kJ/kg)
+* the optimal desorption pressure (bar) #changed from (Pa)!
+* the optimal desorption temperature (K)
+* the fraction of electricity loss (-)
+* the heat requirement (kJ/kg)
+* the compression work (kJ/kg)
+* the mass of CO2 produced (kg)
+* the working capacity (mol/kg)
+* the fraction of CO2 purity (-)
 
-* `ABAVIJ` is the name of the structure
-* `914.4198` is the parasitic energy in kJ/kg
-* `2026.5` is the pressure (Pa)
-* `333.0` is the final temperature (K)
-* `0.248214` is the fraction of final electricity loss (-)
-* `192.9399` is the final heat requirement (kJ/kg)
-* `721.48` is the final compression work (kJ/kg)
-* `43.1682` is the final mass of CO2 produced (kg)
-* `0.98971` is the final working capacity (mol/kg)
-* `0.924254` is the fraction of the final purity CO2 (-)
+#### NB:
+
+* "-1" values stand for "None"
