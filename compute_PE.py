@@ -22,9 +22,9 @@ def totalQ(struc, Td, Pd):
     if model == 'IAST':
       qa['CO_2'], qa['N_2'] = pyiast.iast(
                                       numpy.array([ya, 1-ya]) * Pa,
-                                      [iso_Ta['CO_2'],
-                                      iso_Ta['N_2']],
+                                      [iso_Ta['CO_2'], iso_Ta['N_2']],
                                       verboseflag=False,
+                                      warningoff=True
                                      )
       logging.debug("qa['CO_2']: %r, qa['N_2']: %r" % (qa['CO_2'], qa['N_2']))
     elif model == 'COMP':
@@ -40,9 +40,9 @@ def totalQ(struc, Td, Pd):
   if model == 'IAST':
     qd['CO_2'], qd['N_2'] = pyiast.iast(
                                     numpy.array([yd, 1-yd]) * Pd,
-                                    [iso_Td['CO_2'],
-                                    iso_Td['N_2']],
+                                    [iso_Td['CO_2'], iso_Td['N_2']],
                                     verboseflag=False,
+                                    warningoff=True,
                                     adsorbed_mole_fraction_guess=[0.99999999, 0.00000001]
                                    )
     logging.debug("qd['CO_2']: %r, qd['N_2']: %r" % (qd['CO_2'], qd['N_2']))
@@ -164,6 +164,7 @@ def main(args):
         Td_range = numpy.arange(Td_min,Td_max,Td_step)
         Pd_range = numpy.arange(Pd_min,Pd_max,Pd_step)
     # Compute the PE at different Td, Pd
+
     data = [] # collect all the data at different Pd, Td
     iso_Td = {}
     qa = {}
@@ -179,8 +180,9 @@ def main(args):
                                  fill_value=iso_df[m]["loading(mol/kg)"].max())
         for Pd in Pd_range:
             # Compute the PE @ Td and Pd
+            logging.debug("**** Evaluating: Td=%r, Pd=%r *****" %(Td, Pd))
             PE, Cap, Comp, MProd, wct, Qs, Qd, pur, Qt = totalPE(args.struc, Td, Pd)
-            logging.debug("Td=%r, Pd=%r, PE=%r" %(Td, Pd, PE))
+            logging.debug("PE=%r" %PE)
             if PE > 0: #Needed because errors give negative PE
                 data.append([Td, Pd, PE, Cap, Comp, MProd, wct, Qs, Qd, pur, Qt])
     # Find the conditions for the min PE and extract the results
@@ -276,9 +278,11 @@ if __name__ == "__main__":
          help="Write .log file for debug")
   args = parser.parse_args()
   if args.log:
+    # Set up the debug .log file and print the input settings
     now = datetime.now().isoformat()
     logfile = 'calPE_%s_%s.log' % (args.struc, now)
     logging.basicConfig(
       filename=logfile, format='%(message)s', level=logging.DEBUG
     )
+    logging.debug(args)
   main(args)

@@ -143,7 +143,7 @@ def getPjump(f, t):
     maxGrad = jumpPs[np.argmax(jumpPs.T[1])]
   return t, maxGrad[2], maxGrad[3]
 
-def ConstructInterpolatorIsothermAtTnew(df, T0, Tnew,
+def ConstructInterpolatorIsothermAtTnew(df, T_0, T_new,
                                         loading_key=None,
                                         pressure_key=None,
                                         hoa_key=None,
@@ -154,8 +154,8 @@ def ConstructInterpolatorIsothermAtTnew(df, T0, Tnew,
 
     :param df: DataFrame Pandas DataFrame with pure-component isotherm tabular
                data measured at temperature T0
-    :param T0: Float temperature at which isotherm in df was measured (T0)
-    :param Tf: Float temperature at which we desire to extrapolate the isotherm
+    :param T_0: Float temperature at which isotherm in df was measured (T0)
+    :param T_new: Float temperature at which we desire to extrapolate the isotherm
                in df
     :param loading_key: String key for loading column in df
     :param pressure_key: String key for pressure column in df
@@ -165,21 +165,22 @@ def ConstructInterpolatorIsothermAtTnew(df, T0, Tnew,
                        pressure observed in the data
 
     HOA needs to be in units kJ/mol.
-
-    Author: Cory M. Simon
     """
 
-    # for every point, shift pressures according to Classius-Clapyeron eqn
-    R = 8.314 / 1000.0 # kJ/mol-K
+    R = 8.314 / 1000.0 # kJ/mol/K
     n = df.shape[0]
     df_new = pd.DataFrame()
     df_new[pressure_key] = np.zeros((n,))
     df_new[loading_key] = df[loading_key].values
 
+    # for every point, shift pressures according to Classius-Clapyeron eqn
     for i in range(n):
-        df_new[pressure_key].iloc[i] = df[pressure_key].iloc[i] * \
-                                       np.exp(-df[hoa_key].iloc[i] / R * \
-                                       (1.0 / Tnew - 1.0 / T0))
+        p_0 = df[pressure_key].iloc[i] # Pa
+        HoA = df[hoa_key].iloc[i] # kJ/mol
+        p_new = p_0 * np.exp( - HoA / R * (1.0 / T_new - 1.0 / T_0))
+        df_new[pressure_key].iloc[i] = p_new
+        
+    # return a pyiast.isotherm object
     return pyiast.InterpolatorIsotherm(df_new,
                                        loading_key=loading_key,
                                        pressure_key=pressure_key,
