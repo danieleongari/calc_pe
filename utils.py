@@ -168,7 +168,7 @@ def ConstructInterpolatorIsothermAtTnew(df, T_0, T_new,
     """
 
     R = 8.314 / 1000.0 # kJ/mol/K
-    n = df.shape[0]
+    n = df.shape[0] # number of values in the isotherm
     df_new = pd.DataFrame()
     df_new[pressure_key] = np.zeros((n,))
     df_new[loading_key] = df[loading_key].values
@@ -179,7 +179,7 @@ def ConstructInterpolatorIsothermAtTnew(df, T_0, T_new,
         HoA = df[hoa_key].iloc[i] # kJ/mol
         p_new = p_0 * np.exp( - HoA / R * (1.0 / T_new - 1.0 / T_0))
         df_new[pressure_key].iloc[i] = p_new
-        
+
     # return a pyiast.isotherm object
     return pyiast.InterpolatorIsotherm(df_new,
                                        loading_key=loading_key,

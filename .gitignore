@@ -3,5 +3,5 @@
 *.swo
 *.DS_Store
 ./__pycache__/
-*.log
+./cal*.log
 .idea

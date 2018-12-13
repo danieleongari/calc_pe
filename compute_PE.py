@@ -116,22 +116,19 @@ def main(args):
     if args.comp == 'coal':
         totE = 6631.2
         pCO2 = 1.80 # kg_CO2/kg_coal (10.1039/C4EE02636E, SI, pag. 6)
-        ya = 0.14
+        ya = 0.14 # 14:86 ratio
         Ta = 313.0
         Pa = 101325.0
-        Td_min = 333.0
-    elif args.comp == 'NG':
+    elif args.comp == 'ng':
         totE = 21023.26
-        pCO2 = 3.23 # kg_CO2/kg_NG (10.1039/C4EE02636E, SI, pag. 6)
-        ya = 0.04
+        pCO2 = 3.23 # kg_CO2/kg_ng (10.1039/C4EE02636E, SI, pag. 6)
+        ya = 0.04 # 4% CO2
         Ta = 313.0
         Pa = 101325.0
-        Td_min = 333.0
     elif args.comp == 'air':
-        ya = 0.004
+        ya = 0.0004 # 400ppm CO2
         Ta = 288.0
         Pa = 101325.0
-        Td_min = 308.0
     T_df = {}
     iso_df = {}
     iso_Ta = {}
@@ -149,17 +146,18 @@ def main(args):
                               fill_value=iso_df[m]["loading(mol/kg)"].max())
     # Set the range and the step for the Td and Pd, tested to find the min PE:
     # the range is coherent with 10.1039/c4ee02636e, pag. 4136, 2nd col.
+    Td_min = Ta + 20.0
     Td_step = 10.0
-    Td_max = Td_min+100*Td_step
-    Pd_min = 0.01*101325.0
-    Pd_step = 0.01*101325.0
-    Pd_max = 3.0*101325.0
+    Td_max = Td_min + 100.0
+    Pd_min = 0.01 * 101325.0
+    Pd_step = 0.01 * 101325.0
+    Pd_max = 3.0 * 101325.0
     if args.process == 'PSA':
         Td_range = numpy.array([Td_min])
         Pd_range = numpy.arange(Pd_min,Pd_max,Pd_step)
     elif args.process == 'TSA':
         Td_range = numpy.arange(Td_min,Td_max,Td_step)
-        Pd_range = numpy.array([1.0*101325.0])
+        Pd_range = numpy.array([Pa])
     elif args.process == 'TPSA':
         Td_range = numpy.arange(Td_min,Td_max,Td_step)
         Pd_range = numpy.arange(Pd_min,Pd_max,Pd_step)
@@ -189,25 +187,27 @@ def main(args):
     data = numpy.array(data)
     data_minPE = data[numpy.argmin(data.T[2])]
     logging.debug("data_minPE: %r" % data_minPE)
-    finPE = round(data_minPE[2]/1000., 6)   # minimum PE (kJ/kg)
-    finP = round(data_minPE[1]/101325.0, 3) # desorption pressure (bar)
-    finT = round(data_minPE[0], 1)          # desorption temperature (K)
-    if args.comp in ['coal','NG']:
-        finEL = round(finPE * pCO2 / totE, 5) # fraction of electricity loss (-)
+    finPE = data_minPE[2]/1000   # minimum PE (kJ/kg)
+    finP = data_minPE[1]/101325.0 # desorption pressure (bar)
+    finT = data_minPE[0]          # desorption temperature (K)
+    if args.comp in ['coal','ng']:
+        finEL = finPE * pCO2 / totE # fraction of electricity loss (-)
     elif args.comp == 'air':
-        finEL = -1
-    finCap = round(data_minPE[3]/1000., 6)  # heat requirement (kJ/kgCO2)
-    finComp = round(data_minPE[4]/1000., 6) # compression work (kJ/kgCO2)
-    finMProd = round(data_minPE[5], 5)      # Mass of CO2 produced (kg)
-    finWC = round(data_minPE[6], 5)         # CO2 working capacity (mol/kg)
-    finPur = round(data_minPE[9], 5)        # fraction of CO2 purity (-)
-    finQs = round(data_minPE[7]/1000., 6)   # (not printed) Heat required to carry out the separation, Q_thermal (kJ/kgCO2)
-    finQd = round(data_minPE[8]/1000., 6)   # (not printed) Energy to heat the adsorbent for desorption, sensible heat (kJ/kgCO2)
-    finQt = round(data_minPE[10]/1000., 6)  # (not printed) Energy to undo the adsorption process, Dh (kJ/kgCO2)
+        finEL = numpy.nan
+    finCap = data_minPE[3]/1000   # heat requirement (kJ/kgCO2)
+    finComp = data_minPE[4]/1000  # compression work (kJ/kgCO2)
+    finMProd = data_minPE[5]      # Mass of CO2 produced (kg)
+    finWC = data_minPE[6]         # CO2 working capacity (mol/kg)
+    finPur = data_minPE[9]        # fraction of CO2 purity (-)
+    finQs = data_minPE[7]/1000    # (not printed) Heat required to carry out the separation, Q_thermal (kJ/kgCO2)
+    finQd = data_minPE[8]/1000    # (not printed) Energy to heat the adsorbent for desorption, sensible heat (kJ/kgCO2)
+    finQt = data_minPE[10]/1000   # (not printed) Energy to undo the adsorption process, Dh (kJ/kgCO2)
     # Print the results in the log, on screen and in the database.yml
     finPE_id = [finPE, finP, finT, finEL, finCap, finComp, finMProd, finWC, finPur]
     logging.debug("%s %r" %  (args.struc, finPE_id))
-    print (args.struc, finPE_id)
+    #print (args.struc, finPE_id)
+    print("%s: PE(kJ/kg)= %.2f Pd(bar)= %.2f Td(K)= %.1f EL= %.3f Q(kJ/kg)= %.2f Wcomp(kJ/kg)= %.2f M(kg)= %.3f WC(mol/kg)= %.3f pur= %.3f"
+          %(args.struc,finPE,finP,finT,finEL,finCap,finComp,finMProd,finWC,finPur))
     # END of main
 
 if __name__ == "__main__":
@@ -223,7 +223,7 @@ if __name__ == "__main__":
           help="Density of the adsorbent framework (kg/m3)")
   parser.add_argument(
           "comp",
-          choices=["coal", "NG", "air"],
+          choices=["coal", "ng", "air"],
           help="Compositon of the mixture with CO2.")
   parser.add_argument(
           "-model",
@@ -269,7 +269,7 @@ if __name__ == "__main__":
           "-datapath",
           type=str,
           dest="datapath",
-          default="./ccsdata/",
+          default="./test/",
           help="Path containing the isotherms in .csv format (default: ./ccsdata)")
   parser.add_argument(
          "-l",
