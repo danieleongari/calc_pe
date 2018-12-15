@@ -1,0 +1,44 @@
+Namespace(comp='air', cp=1158.0, datapath='./test/', log=True, method='carnot', process='TSA', rho=948.8, struc='HKUST-1', vf=0.35, yd=0.99)
+ms = 6.167e+02
+**** Evaluating: Td=308.0, Pd=101325.000 *****
+qa['CO_2']: 3.725e-03, qa['N_2']: 3.230e-01
+qd['CO_2']: 3.619e+00, qd['N_2']: 3.619e-08
+wct['CO_2'] = -3.638e+00 => -1.601e-01
+NEGATIVE wct['CO_2']
+**** Evaluating: Td=318.0, Pd=101325.000 *****
+qd['CO_2']: 2.744e+00, qd['N_2']: 2.744e-08
+wct['CO_2'] = -2.762e+00 => -1.215e-01
+NEGATIVE wct['CO_2']
+**** Evaluating: Td=328.0, Pd=101325.000 *****
+qd['CO_2']: 2.087e+00, qd['N_2']: 2.087e-08
+wct['CO_2'] = -2.105e+00 => -9.260e-02
+NEGATIVE wct['CO_2']
+**** Evaluating: Td=338.0, Pd=101325.000 *****
+qd['CO_2']: 1.598e+00, qd['N_2']: 1.598e-08
+wct['CO_2'] = -1.614e+00 => -7.103e-02
+NEGATIVE wct['CO_2']
+**** Evaluating: Td=348.0, Pd=101325.000 *****
+qd['CO_2']: 1.234e+00, qd['N_2']: 1.234e-08
+wct['CO_2'] = -1.250e+00 => -5.499e-02
+NEGATIVE wct['CO_2']
+**** Evaluating: Td=358.0, Pd=101325.000 *****
+qd['CO_2']: 9.617e-01, qd['N_2']: 9.617e-09
+wct['CO_2'] = -9.770e-01 => -4.299e-02
+NEGATIVE wct['CO_2']
+**** Evaluating: Td=368.0, Pd=101325.000 *****
+qd['CO_2']: 7.574e-01, qd['N_2']: 7.574e-09
+wct['CO_2'] = -7.722e-01 => -3.398e-02
+NEGATIVE wct['CO_2']
+**** Evaluating: Td=378.0, Pd=101325.000 *****
+qd['CO_2']: 6.025e-01, qd['N_2']: 6.025e-09
+wct['CO_2'] = -6.169e-01 => -2.714e-02
+NEGATIVE wct['CO_2']
+**** Evaluating: Td=388.0, Pd=101325.000 *****
+qd['CO_2']: 4.843e-01, qd['N_2']: 4.843e-09
+wct['CO_2'] = -4.982e-01 => -2.192e-02
+NEGATIVE wct['CO_2']
+**** Evaluating: Td=398.0, Pd=101325.000 *****
+qd['CO_2']: 3.930e-01, qd['N_2']: 3.930e-09
+wct['CO_2'] = -4.064e-01 => -1.788e-02
+NEGATIVE wct['CO_2']
+HKUST-1: Unfeasible process!
