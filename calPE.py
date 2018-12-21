@@ -66,7 +66,7 @@ def ConstructInterpolatorIsothermAtTnew(df, T_0, T_new,
 def totalQ(struc, Td, Pd):
   """ Returns [0] Q_{thermal} computed from eq. 1 in 10.1039/c4ee02636e (kJ/mol)
               [1] pur, final CO2 purity (-)
-              [2] m1, mass CO2 per m3 of bed (kg/m3)
+              [2] MProd, mass CO2 per m3 of bed (kg/m3)
               [3] wct, working capacity CO2 ()
               [4] Qs, sensible heat (kJ/mol)
               [5] Qd, enthalpy of desorption (kJ/mol, defined as positive)
@@ -109,9 +109,9 @@ def totalQ(struc, Td, Pd):
     return np.nan, np.nan, np.nan, wct['CO_2'], np.nan, np.nan
   else:
     # Compute CO2 mass, and final purity
-    m1 = wct['CO_2'] * ms * CO2_KGMOL
+    MProd = wct['CO_2'] * ms * CO2_KGMOL
     pur = wct['CO_2'] / (wct['CO_2'] + wct['N_2'])
-    logging.debug("m1 = {:.3e}, pur = {:.3e}".format(m1, pur))
+    logging.debug("MProd = {:.3e}, pur = {:.3e}".format(MProd, pur))
     # Compute Q_{thermal} (Qt) = sensible_heat (Qs) + desorption_enthalpy (Qd)
     Qs = cp * ms * (Td - Ta)
     Qd = 0
@@ -122,47 +122,53 @@ def totalQ(struc, Td, Pd):
     Qd *= ms * 1e3
     Qt = Qs - Qd
     logging.debug("Qs = {:.3e}, Qd = {:.3e}, Qt = {:.3e}".format(Qs, Qd, Qt))
-    return Qt, pur, m1, wct['CO_2'], Qs, -Qd
+    return Qt, pur, MProd, wct['CO_2'], Qs, -Qd
 
 def totalW(Pd, pur):
-    """ Compression work (10.1039/c4ee02636e, 'functional representation') """
+    """ Compression work (kJ/kgCO2) from P_desorption (Pa) to 150bar. This uses
+    a 'functional representation' as described in 10.1039/c4ee02636e.
+    """
     plog = -5.4433e5/np.log(1e6/1e3)
     Wp = 7.1723e5+np.log(Pd/1000)*plog
     mp = (2.313-2.102)/(np.sqrt(1e6)-np.sqrt(1e3))
     mpr = 1.102+mp*(np.sqrt(Pd)-np.sqrt(1e3))
-    Wt = Wp*(1+mpr*(1./pur-1))
-    return Wt
+    Wc = Wp*(1+mpr*(1./pur-1))
+    return Wc
 
 def totalPE(struc, Td, Pd):
   """ Total PE, computed from eq. 2 in 10.1039/c4ee02636e (method = 'carnot') """
-  Qt, pur, m1, wct, Qs, Qd = totalQ(struc, Td, Pd) # Compute mainly the PE and CO2 purity
+  Qt, pur, MProd, wct, Qs, Qd = totalQ(struc, Td, Pd) # Compute mainly the PE and CO2 purity
   if wct < 0: # Negative working capacity
       return np.nan, np.nan, np.nan, np.nan, wct, np.nan, np.nan, np.nan, np.nan
-  Wt = totalW(Pd, pur) # Compute compression work
-  logging.debug("Wt = {:.3e}".format(Wt))
+  if exclude_comp:
+      Wc = 0
+  else:  # Compute compression work from Pd to 150bar
+      Wc = totalW(Pd, pur)
+  logging.debug("Wc = {:.3e}".format(Wc))
   if method == "carnot":
       nu = (Td + 10 - 283)/(Td + 10)
       logging.debug("nu = {:.3e}".format(nu))
-      Qteff = 0.75 * Qt * nu / m1
-      Qs =    0.75 * Qs * nu / m1
-      Qd =    0.75 * Qd * nu / m1
+      Qteff = 0.75 * Qt * nu / MProd
+      Qs =    0.75 * Qs * nu / MProd
+      Qd =    0.75 * Qd * nu / MProd
   elif method == "linear":
-      Qteff = Qt * (-0.08037 + 0.002326 * (Td - 273 + 10)) / m1
-      Qs = Qs * (-0.08037 + 0.002326 * (Td - 273 + 10)) / m1
-      Qd = Qd * (-0.08037 + 0.002326 * (Td - 273 + 10)) / m1
+      Qteff = Qt * (-0.08037 + 0.002326 * (Td - 273 + 10)) / MProd
+      Qs = Qs * (-0.08037 + 0.002326 * (Td - 273 + 10)) / MProd
+      Qd = Qd * (-0.08037 + 0.002326 * (Td - 273 + 10)) / MProd
   logging.debug("Qt = {:.3e}, Qteff = {:.3e}".format(Qt, Qteff))
-  PE = Qteff + Wt
-  return PE, Qteff, Wt, m1, wct, Qs, Qd, pur, Qt
+  PE = Qteff + Wc
+  return PE, Qteff, Wc, MProd, wct, Qs, Qd, pur, Qt
 
 def main(args):
     global cp, ms, ya, yd, Ta, Pa, vf, gas, totE, pCO2, method
-    global iso_Ta, iso_df, T_df, iso_Td, qa, wcvf_a
+    global iso_Ta, iso_df, T_df, iso_Td, qa, wcvf_a, exclude_comp
     # Read parameters
     method = args.method
     vf = args.vf
     cp = args.cp
     yd = args.yd
     ms = args.rho * ( 1. - vf ) # Mass (kg) of adsorbent in per m3 of bed
+    exclude_comp = args.exclude_comp
     logging.debug("ms = {:.3e}".format(ms))
     if args.comp == 'coal':
         totE = 6631.2
@@ -229,10 +235,10 @@ def main(args):
         for Pd in Pd_range:
             # Compute the PE @ Td and Pd
             logging.debug("**** Evaluating: Td={:.1f}, Pd={:.3f} *****".format(Td, Pd))
-            PE, Cap, Comp, MProd, wct, Qs, Qd, pur, Qt = totalPE(args.struc, Td, Pd)
+            PE, Qteff, Wc, MProd, wct, Qs, Qd, pur, Qt = totalPE(args.struc, Td, Pd)
             if wct > 0 : #Positive working capacity
                 logging.debug("PE = {:.3e}".format(PE))
-                data.append([Td, Pd, PE, Cap, Comp, MProd, wct, Qs, Qd, pur, Qt])
+                data.append([Td, Pd, PE, Qteff, Wc, MProd, wct, Qs, Qd, pur, Qt])
     # Find the conditions for the min PE and extract the results
     if len(data) == 0: # All wc are negative
         return "{:s}: Unfeasible process!".format(args.struc)
@@ -247,8 +253,8 @@ def main(args):
         finEL = finPE*1e3 * pCO2 / totE # fraction of electricity loss (-)
     elif args.comp == 'air':
         finEL = np.nan
-    finCap = data_minPE[3]/1e3  # heat requirement (kJ/kgCO2)
-    finComp = data_minPE[4]/1e3 # compression work (kJ/kgCO2)
+    finQteff = data_minPE[3]/1e3  # heat requirement (kJ/kgCO2)
+    finWc = data_minPE[4]/1e3 # compression work (kJ/kgCO2)
     finMProd = data_minPE[5]    # Mass of CO2 produced (kg)
     finWC = data_minPE[6]       # CO2 working capacity (mol/kg)
     finPur = data_minPE[9]      # fraction of CO2 purity (-)
@@ -258,7 +264,7 @@ def main(args):
     return "{:s}: PE(MJ/kg)= {:.3f} Pd(bar)= {:.3f} Td(K)= {:.1f} ".format(
             args.struc,finPE,finP,finT) + \
            "EL(-) = {:.3f} Q(kJ/kg)= {:.2f} Wcomp(kJ/kg)= {:.2f} ".format(
-            finCap,finComp,finEL) + \
+            finEL,finQteff,finWc) + \
            "M(kg)= {:.3f} WC(mol/kg)= {:.3f} pur(-)= {:.3f}".format(
             finMProd,finWC,finPur)
 
@@ -316,6 +322,11 @@ if __name__ == "__main__":
           dest="datapath",
           default="./test/",
           help="Path containing the isotherms in .csv format (default: ./ccsdata)")
+  parser.add_argument(
+          "-exclude_comp",
+          action = "store_true",
+          dest="exclude_comp",
+          help="Exclude the energy needed to compress the gas to 150bar.")
   parser.add_argument(
          "-l",
          "--log",
