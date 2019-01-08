@@ -165,9 +165,22 @@ def main(args):
     # Read parameters
     method = args.method
     vf = args.vf
-    cp = args.cp
+    if args.cp == None:
+        try:
+            with open(os.path.join(args.datapath, args.struc, "cp.csv")) as f:
+                cp = float(f.readline().strip()) #cp in J/kg/K
+        except:
+            cp = 948.0
+
+    else:
+        cp = args.cp
     yd = args.yd
-    ms = args.rho * ( 1. - vf ) # Mass (kg) of adsorbent in per m3 of bed
+    if args.rho == None:
+        with open(os.path.join(args.datapath, args.struc, "rho.csv")) as f:
+            rho = float(f.readline().strip()) #density in kg/m3
+    else:
+        rho = args.rho
+    ms = rho * ( 1. - vf ) # Mass (kg) of adsorbent in per m3 of bed
     exclude_comp = args.exclude_comp
     logging.debug("ms = {:.3e}".format(ms))
     if args.comp == 'coal':
@@ -277,51 +290,61 @@ if __name__ == "__main__":
           "struc",
           help="Name of the adsorbent framework.")
   parser.add_argument(
-          "rho",
-          type=float,
-          help="Density of the adsorbent framework (kg/m3)")
-  parser.add_argument(
           "comp",
           choices=["coal", "ng", "air"],
           help="Compositon of the mixture with CO2.")
+  parser.add_argument(
+          "-rho",
+          type=float,
+          dest="rho",
+          default=None,
+          help="Density of the adsorbent framework (kg/m3).\n" +
+               "(default: value readen from datapath/struc/rho.csv)")
   parser.add_argument(
           "-vf",
           type=float,
           dest="vf",
           default=0.35,
-          help="Void fraction of the adsorbent bed (default: 0.35).")
+          help="Void fraction of the adsorbent bed.\n" +
+               "(default: 0.35)")
   parser.add_argument(
           "-process",
           dest="process",
           default="TPSA",
           choices=["TPSA", "TSA", "PSA"],
-          help="Process used for the CO2 sequestration.")
+          help="Process used for the CO2 sequestration.\n" +
+               "(default: TPSA)")
   parser.add_argument(
           "-cp",
           type=float,
           dest="cp",
-          default=985.0,
+          default=None,
           help="Choice for the Cp of the adsorbent:\n" +
                "for nanoporous materials it should range between 761.0\n" +
-               "and 1210.0 J/kg/K (default: 985.0 J/Kg/K, the average)")
+               "and 1210.0 J/kg/K.\n" +
+               "(default: readen from datapath/struc/cp.csv if present,\n" +
+               "          otherwise 985.0 J/kg/K, the average)")
   parser.add_argument(
           "-yd",
           type=float,
           dest="yd",
           default=0.99,
-          help="Required output CO2 fraction at desorption (default: 0.99)")
+          help="Required output CO2 fraction at desorption.\n" +
+               "(default: 0.99)")
   parser.add_argument(
           "-method",
           dest="method",
           default="carnot",
           choices=["carnot", "linear"],
-          help="Method to compute the electricity conversion efficiency.")
+          help="Method to compute the electricity conversion efficiency.\n" +
+               "(default: carnot)")
   parser.add_argument(
           "-datapath",
           type=str,
           dest="datapath",
           default="./test/",
-          help="Path containing the isotherms in .csv format (default: ./ccsdata)")
+          help="Path containing the isotherms in .csv format.\n" +
+               "(default: ./test/)")
   parser.add_argument(
           "-exclude_comp",
           action = "store_true",
