@@ -75,6 +75,7 @@ def totalQ(struc, Td, Pd):
   CO2_KGMOL = 0.044 # kg/mol
   # extract or compute the adsorption conditions if not already stored
   if not qa:
+    logging.debug("Ta = {:.3e}, Pa = {:.3e}, ya = {:.3e}, yd = {:.3e}".format(Ta,Pa,ya,yd))
     wcvf_a['CO_2'] = wcvf(ya, Ta, Pa)
     wcvf_a['N_2'] = wcvf(1-ya, Ta, Pa)
     # gas uptake @ adsorption
@@ -182,7 +183,7 @@ def main(args):
         rho = args.rho
     ms = rho * ( 1. - vf ) # Mass (kg) of adsorbent in per m3 of bed
     exclude_comp = args.exclude_comp
-    logging.debug("ms = {:.3e}".format(ms))
+    logging.debug("cp = {:.3e}, rho = {:.3e}, ms = {:.3e}".format(cp,rho,ms))
     if args.comp == 'coal':
         totE = 6631.2
         pCO2 = 1.80 # kg_CO2/kg_coal (10.1039/C4EE02636E, SI, pag. 6)
@@ -196,6 +197,8 @@ def main(args):
         Ta = 313.0
         Pa = 101325.0
     elif args.comp == 'air':
+        totE = np.nan # ill defined
+        pCO2 = np.nan # ill defined
         ya = 0.0004 # 400ppm CO2
         Ta = 288.0
         Pa = 101325.0
