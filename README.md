@@ -20,7 +20,7 @@
 ### Input and run
 
 ```
-calPE.py Mg-MOF74 914.88 coal -cp 896 -process TPSA -datapath ./test/
+$ calPE.py Mg-MOF74 coal -rho 914.88 -cp 896 -process TPSA -datapath ./test/
 ```
 
 See the `--help` for the input description.
@@ -44,25 +44,43 @@ loading pressures of the isotherm. It is needed to shift the original isotherm
 to a new temperature using the Classius-Clapyeron equation. Note that the HoA
 is defined here with a NEGATIVE value.
 
+* You can provide density and cp as single value files `cp.csv` and `rho.csv`:
+see the tests as example.
+
+* For testing the minimal inputs are:
+```
+$ calPE.py Mg-MOF74 coal
+$ calPE.py HKUST-1 coal
+```
+
 ### Output
 
 In the output, the program prints:
 
-* name of the structure
-* parasitic energy (kJ/kg)
-* optimal desorption pressure (bar)
-* optimal desorption temperature (K)
-* fraction of electricity loss (-)
-* heat requirement (kJ/kg)
-* compression work (kJ/kg)
-* mass of CO<sub>2</sub> produced (kg)
-* working capacity (mol/kg)
-* fraction of CO<sub>2</sub> purity (-)
+```
+Mg-MOF74: PE(MJ/kg)= 0.867: Pd(bar)= 0.01 Td(K)= 333.0 EL(-) = 0.235 Q(MJ/kg)= 0.124 Wcomp(MJ/kg)= 0.743 WCv(kg/m3)= 114.655 WCg(kg/kg)= 0.193 pur(-)= 0.967
+```
 
-or, in case of negative working capacity for all the tested desorption conditions:
+* Name of the structure
+* `PE(MJ/kg)`: parasitic energy (Note: PE=Q+Wcomp)
+* `Pd(bar)`: optimal desorption pressure
+* `Td(K)`: optimal desorption temperature
+* `EL(J/J)`: fraction of electricity loss
+* `Q(MJ/kg)`: heat requirement
+* `Wcomp(MJ/kg)`: compression work
+* `WCv(kg/m3)`: volumetric working capacity, i.e.,
+mass of CO<sub>2</sub> produced per m<sup>2</sup> of bed, considering `-vf` void fraction.
+* `WCg(kg/kg)`: gravimetric working capacity, i.e.,
+mass of CO<sub>2</sub> produced per kg of bed, considering `-vf` void fraction.
+* `pur(mol/mol)`: molar fraction of CO<sub>2</sub> final purity (-)
 
-* name of the structure
-* warning: "Unfeasible process"
+A warning is printed in case of negative working capacity
+for all the tested desorption conditions, e.g.,For example:
+
+```
+$ calPE.py HKUST-1 air
+HKUST-1: Unfeasible process!
+```
 
 #### NB:
 
@@ -80,3 +98,10 @@ and there is not a motivated need for reiteration.
 The final CO<sub>2</sub> purity is computed as the working capacity of
 CO<sub>2</sub> over the sum of the working capacities of both CO<sub>2</sub> and
 N<sub>2</sub>.
+
+* By default the program prints the results for optimal PE (i.e., the lowest).
+However, one can search for other optimal parameters by using the `-opt` command.
+For example, lowest `Q` if he is not interest in compressing the CO<sub>2</sub>,
+or higher purity or working capacity (`WC`) or CO<sub>2</sub> final purity (`pur`).
+*Note that these may not be anymore optimization problems, giving just the max/min
+T and P conditions.*
