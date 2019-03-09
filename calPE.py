@@ -138,20 +138,20 @@ def totalWcomp(Pd, pur):
     return Wcomp
 
 def totalPE(struc, Td, Pd):
-  """ Total PE, computed from eq. 2 in 10.1039/c4ee02636e (method = 'carnot') """
+  """ Total PE, computed from eq. 2 in 10.1039/c4ee02636e (eleff = 'carnot') """
   Qt, Qs, Qd, WCv, pur = totalQ(struc, Td, Pd) # Compute mainly the PE and CO2 purity
   if WCv < 0: # Negative working capacity: return NaN for all values but WCv
       return np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, WCv, np.nan
   # Compute compression work from Pd to 150bar
   Wcomp = totalWcomp(Pd, pur)
   logging.debug("Wcomp = {:.3e}".format(Wcomp))
-  if method == "carnot":
+  if eleff == "carnot":
       nu = (Td + 10 - 283)/(Td + 10)
       logging.debug("nu = {:.3e}".format(nu))
       Qteff = 0.75 * Qt * nu / WCv
       Qseff = 0.75 * Qs * nu / WCv
       Qdeff = 0.75 * Qd * nu / WCv
-  elif method == "linear":
+  elif eleff == "linear":
       Qteff = Qt * (-0.08037 + 0.002326 * (Td - 273 + 10)) / WCv
       Qseff = Qs * (-0.08037 + 0.002326 * (Td - 273 + 10)) / WCv
       Qdeff = Qd * (-0.08037 + 0.002326 * (Td - 273 + 10)) / WCv
@@ -159,56 +159,46 @@ def totalPE(struc, Td, Pd):
   PE = Qteff + Wcomp
   return PE, Qteff, Qt, Qseff, Qdeff, Wcomp, WCv, pur
 
-def main(args):
-    global cp, ms, ya, yd, Ta, Pa, vf, gas, totE, method
+def mainPE(struc, gasin, rho, vf, process, cp, yd, eleff, opt, T_iso, iso_df):
+    """Main script to compute CO2 parasitic energy from single component
+    CO2 and N2 isotherms
+
+    :str struc: name of the adsorbent
+    :str gasin: choice of the input mixture
+    :float rho: density of the adsorbent (kg/m3)
+    :float vf:  void fraction of the bed, e.g., 0.35
+    :str process: choice of the process, e.g., TPSA
+    :float cp: heat capacity of the adsorbent (J/kg/K), e.g., 985.0
+    :float yd: target CO2 purity, e.g., 0.99
+    :str eleff: choice of the method to compute electr. eff., e.g., 'carnot'
+    :str opt: choice of the parameter to optimize for the process, e.g., 'PE'
+    :[float,float] T_iso: temperature of the used isotherms for CO2 and N2
+    :[df,df] iso_df: dataframe with isotherms for CO2 and N2, see examples
+    """
+    global cp, ms, ya, yd, Ta, Pa, vf, gas, totE, eleff
     global iso_Ta, iso_df, T_df, iso_Td, qa, wcvf_a
 
-    # Read parameters
-    method = args.method
-    vf = args.vf
-    if args.cp == None:
-        try:
-            with open(os.path.join(args.datapath, args.struc, "cp.csv")) as f:
-                cp = float(f.readline().strip()) #cp in J/kg/K
-        except:
-            cp = 948.0
-
-    else:
-        cp = args.cp
-    yd = args.yd
-    if args.rho == None:
-        with open(os.path.join(args.datapath, args.struc, "rho.csv")) as f:
-            rho = float(f.readline().strip()) #density in kg/m3
-    else:
-        rho = args.rho
+    # Initialize calculation
     ms = rho * ( 1. - vf ) # Mass (kg) of adsorbent in per m3 of bed
-    logging.debug("cp = {:.3e}, rho = {:.3e}, ms = {:.3e}".format(cp,rho,ms))
-    if args.comp == 'coal':
+
+    if gasin == 'coal':
         totE = 6631.2 / 1.80 # kJ/kg_CO2 (10.1039/C4EE02636E, SI, pag. 6)
         ya = 0.14 # 14:86 molar ratio
         Ta = 313.0
         Pa = 101325.0
-    elif args.comp == 'ng':
+    elif gasin == 'ng':
         totE = 21023.26 / 3.23  # kJ/kg_CO2 (10.1039/C4EE02636E, SI, pag. 6)
         ya = 0.04 # 4% molar CO2
         Ta = 313.0
         Pa = 101325.0
-    elif args.comp == 'air':
+    elif gasin == 'air':
         totE = np.nan # ill defined
         pCO2 = np.nan # ill defined
         ya = 0.0004 # 400ppm molar CO2
         Ta = 288.0
         Pa = 101325.0
-    T_df = {}
-    iso_df = {}
     iso_Ta = {}
-    qa = {}
-    wcvf_a = {}
     for m in ['CO_2','N_2']:
-        df_dir = os.path.join(args.datapath, args.struc, m) # dir containing isotherms
-        df_file = glob(os.path.join(df_dir, '*.csv'))[0] # .csv files for the isotherms
-        T_df[m] = int(os.path.splitext(os.path.basename(df_file))[0][:-1]) # temperature of the isotherms
-        iso_df[m] = pd.read_csv(df_file, sep=' ') #values of the isotherm
         # Extrapolate the pure-component isotherm at Ta
         iso_Ta[m], _ = ConstructInterpolatorIsothermAtTnew(
                               iso_df[m], T_df[m], Ta,
@@ -218,25 +208,28 @@ def main(args):
                               fill_value=iso_df[m]["loading(mol/kg)"].max())
 
     # Set the range and the step for the Td and Pd, tested to find the min PE:
-    # the range was changed from 10.1039/c4ee02636e, pag. 4136, 2nd col.
+    # the range was changed from {10.1039/c4ee02636e, pag. 4136, 2nd col},
+    # to have less points and be faster.
     Td_min = Ta + 20.0
     Td_step = 10.0
     Td_max = Td_min + 100.0
     Pd_min = 0.01 * 101325.0
     Pd_step = 0.02 * 101325.0
     Pd_max = 1.5 * 101325.0
-    if args.process == 'PSA':
+    if process == 'PSA':
         Td_range = np.array([Td_min])
         Pd_range = np.arange(Pd_min,Pd_max,Pd_step)
-    elif args.process == 'TSA':
+    elif process == 'TSA':
         Td_range = np.arange(Td_min,Td_max,Td_step)
         Pd_range = np.array([Pa])
-    elif args.process == 'TPSA':
+    elif process == 'TPSA':
         Td_range = np.arange(Td_min,Td_max,Td_step)
         Pd_range = np.arange(Pd_min,Pd_max,Pd_step)
 
     # Compute the PE at different Td, Pd
     data = [] # collect all the data at different Pd, Td
+    qa = {}
+    wcvf_a = {}
     iso_Td = {}
     for Td in Td_range:
         for m in ['CO_2','N_2']:
@@ -255,44 +248,60 @@ def main(args):
                 logging.debug("PE = {:.3e}".format(PE))
                 data.append([PE, Pd, Td, Qteff, Qt, Qseff, Qdeff, Wcomp, WCv, pur])
 
-    # Find the optimal conditions required and combine the results in a string
+    # Find the optimal conditions required and combine the results in a dict
     if len(data) == 0: # All wc are negative
-        return "{:s}: Unfeasible process!".format(args.struc)
+        results_dict = {'process_feasible' : False}
+        return results_dict
     data = np.array(data)
-    if args.opt == "PE":
+    if opt == "PE":
         data_opt = data[np.argmin(data.T[0])]
-    elif args.opt == "Q":
+    elif opt == "Q":
         data_opt = data[np.argmin(data.T[3])]
-    elif args.opt == "WC":
+    elif opt == "WC":
         data_opt = data[np.argmax(data.T[8])]
-    elif args.opt == "pur":
+    elif opt == "pur":
         data_opt = data[np.argmax(data.T[9])]
     logging.debug("data_opt:")
     logging.debug(data_opt)
-    finPE = data_opt[0]/1e6       # minimum PE (MJ/kg)
-    finP = data_opt[1]/101325.0   # desorption pressure (bar)
-    finT = data_opt[2]            # desorption temperature (K)
-    finEL = finPE*1e3 / totE      # fraction of electricity loss (kJ/kJ) - Returns np.nan for "air"
-    finQteff = data_opt[3]/1e6    # heat requirement (MJ/kgCO2)
-    finQt = data_opt[6]/1e6       # (not printed) Not-effective Qt (MJ/kgCO2)
-    finQs = data_opt[4]/1e6       # (not printed) Sensible heat (MJ/kgCO2)
-    finQd = data_opt[5]/1e6       # (not printed) Desopt. enthalpy (MJ/kgCO2)
-    finWcomp = data_opt[7]/1e6    # Compression work (kJ/kgCO2)
-    finWCv = data_opt[8]          # Volumetric working capacity (kgCO2/m3)
-    finWCg = data_opt[8]/ms       # Gravimetric working capacity (kgCO2/kg)
-    finPur = data_opt[9]          # fraction of CO2 purity (-)
-    results_str="{:s}: ".format(args.struc)
-    results_str+="PE(MJ/kg)= {:.3f}: ".format(finPE)
-    results_str+="Pd(bar)= {:.2f} ".format(finP)
-    results_str+="Td(K)= {:.1f} ".format(finT)
-    results_str+="EL(J/J) = {:.3f} ".format(finEL)
-    results_str+="Q(MJ/kg)= {:.3f} ".format(finQteff)
-    results_str+="Wcomp(MJ/kg)= {:.3f} ".format(finWcomp)
-    results_str+="WCv(kg/m3)= {:.3f} ".format(finWCv)
-    results_str+="WCg(kg/kg)= {:.3f} ".format(finWCg)
-    results_str+="pur(mol/mol)= {:.3f}".format(finPur)
-
-    return results_str
+    results_dict = {}
+    results_dict['process_feasible'] = True
+    results_dict['PE'] = data_opt[0]/1e6
+    results_dict['PE_units'] = 'MJ/kg'
+    results_dict['PE_descr'] = 'parassitic energy at optimal process conditions'
+    results_dict['P'] = data_opt[1]/101325.0
+    results_dict['P_units'] = 'bar'
+    results_dict['PE_descr'] = 'desorption pressure'
+    results_dict['T'] = data_opt[2]
+    results_dict['T_units'] = 'K'
+    results_dict['T_descr'] = 'desorption temperature'
+    results_dict['eloss'] = finPE*1e3 / totE
+    results_dict['eloss_units'] = 'kJ/kJ'
+    results_dict['eloss_descr'] = 'fraction of electricity loss (np.nan for "air")'
+    results_dict['Qteff'] = data_opt[3]/1e6
+    results_dict['Qteff_units'] = 'MJ/kgCO2'
+    results_dict['Qteff_descr'] = 'heat requirement'
+    results_dict['Qt'] = data_opt[6]/1e6
+    results_dict['Qt_units'] = 'MJ/kgCO2'
+    results_dict['Qt_descr'] = 'Not-effective heat requirement'
+    results_dict['Qs'] = data_opt[4]/1e6
+    results_dict['Qs_units'] = 'MJ/kgCO2'
+    results_dict['Qs_descr'] = 'Sensible heat'
+    results_dict['Qd'] = data_opt[5]/1e6
+    results_dict['Qd_units'] = 'MJ/kgCO2'
+    results_dict['Qd_descr'] = 'desorption enthalpy'
+    results_dict['Wcomp'] = data_opt[7]/1e6
+    results_dict['Wcomp_units'] = 'MJ/kgCO2'
+    results_dict['Wcomp_descr'] = 'compression work'
+    results_dict['WCv'] = data_opt[8]
+    results_dict['WCv_units'] = 'kgCO2/m3'
+    results_dict['WCv_descr'] = 'volumetric working capacity'
+    results_dict['WCg'] = data_opt[8]/ms
+    results_dict['WCg_units'] = 'kgCO2/kg'
+    results_dict['WCg_descr'] = 'gravimetric working capacity'
+    results_dict['Pur'] = data_opt[9]
+    results_dict['Pur_units'] = 'mol/mol
+    results_dict['Pur_descr'] = 'fraction of CO2 purity'
+    return results_dict
 
 if __name__ == "__main__":
   parser = argparse.ArgumentParser(
@@ -302,9 +311,10 @@ if __name__ == "__main__":
           "struc",
           help="Name of the adsorbent framework.")
   parser.add_argument(
-          "comp",
+          "gasin",
           choices=["coal", "ng", "air"],
-          help="Compositon of the mixture with CO2.")
+          help="Compositon of the input gas mixture, i.e. post-combustion\n" +
+               "flue gas from coal or natural gas, or air.")
   parser.add_argument(
           "-rho",
           type=float,
@@ -331,7 +341,7 @@ if __name__ == "__main__":
           type=float,
           dest="cp",
           default=None,
-          help="Choice for the Cp of the adsorbent:\n" +
+          help="Choice for the heat adsorption of the adsorbent:\n" +
                "for nanoporous materials it should range between 761.0\n" +
                "and 1210.0 J/kg/K.\n" +
                "(default: readen from datapath/struc/cp.csv if present,\n" +
@@ -344,19 +354,12 @@ if __name__ == "__main__":
           help="Required output CO2 fraction at desorption.\n" +
                "(default: 0.99)")
   parser.add_argument(
-          "-method",
-          dest="method",
+          "-eleff",
+          dest="eleff",
           default="carnot",
           choices=["carnot", "linear"],
           help="Method to compute the electricity conversion efficiency.\n" +
                "(default: carnot)")
-  parser.add_argument(
-          "-datapath",
-          type=str,
-          dest="datapath",
-          default="./test/",
-          help="Path containing the isotherms in .csv format.\n" +
-               "(default: ./test/)")
   parser.add_argument(
           "-opt",
           dest="opt",
@@ -365,6 +368,13 @@ if __name__ == "__main__":
           help="Optimizes for the optimal condition: lowest PE or Q,\n" +
                "or highest working capacity (WC) or pur(ity).\n" +
                "(default: PE)")
+  parser.add_argument(
+          "-datapath",
+          type=str,
+          dest="datapath",
+          default="./test/",
+          help="Path containing the isotherms in .csv format.\n" +
+               "(default: ./test/)")
   parser.add_argument(
          "-l",
          "--log",
@@ -378,9 +388,52 @@ if __name__ == "__main__":
     logging.basicConfig(
       filename=logfile, format='%(message)s', level=logging.DEBUG
     )
-
-  # Write input in .log, run the main program and print results in .log and on screen
   logging.debug(args)
-  results = main(args)
-  logging.debug(results)
-  print(results)
+
+  # Convert varables into the arguments to feed the mainPE function
+  if args.rho == None:
+        with open(os.path.join(args.datapath, args.struc, "rho.csv")) as f:
+            args.rho = float(f.readline().strip()) #density in kg/m3
+
+  if args.cp == None:
+        try:
+            with open(os.path.join(args.datapath, args.struc, "cp.csv")) as f:
+                cp = float(f.readline().strip()) #cp in J/kg/K
+        except:
+            cp = 948.0 #average for MOFs
+  else:
+        cp = args.cp
+
+  for m in ['CO_2','N_2']:
+    iso_dir = os.path.join(args.datapath, args.struc, m) # dir containing isotherms
+    iso_file = glob(os.path.join(df_dir, '*.csv'))[0] # .csv files for the isotherms
+    T_iso[m] = int(os.path.splitext(os.path.basename(df_file))[0][:-1]) # read temperature of the isotherm from the filename
+    iso_df[m] = pd.read_csv(df_file, sep=' ') #values of the isotherm
+
+  # Run the main function
+  res = mainPE(struc=args.struc,
+               gasin=args.gasin,
+               rho=args.rho,
+               vf=args.vf,
+               process=args.process,
+               cp=args.cp,
+               yd=args.yd,
+               eleff=args.eleff,
+               opt=args.eleff,
+               T_iso=T_iso,
+               iso_df=iso_df,
+              )
+
+  # Convert results into a single-line string and print it
+  results_str="{:s}: ".format(args.struc)
+  results_str+="PE(MJ/kg)= {:.3f}: ".format(res['PE'])
+  results_str+="Pd(bar)= {:.2f} ".format(res['P'])
+  results_str+="Td(K)= {:.1f} ".format(res['T'])
+  results_str+="EL(J/J) = {:.3f} ".format(res['EL'])
+  results_str+="Q(MJ/kg)= {:.3f} ".format(res['Qteff'])
+  results_str+="Wcomp(MJ/kg)= {:.3f} ".format(res['Wcomp'])
+  results_str+="WCv(kg/m3)= {:.3f} ".format(res['WCv'])
+  results_str+="WCg(kg/kg)= {:.3f} ".format(res['WCg'])
+  results_str+="pur(mol/mol)= {:.3f}".format(res['Pur'])
+  logging.debug(results_str)
+  print(results_str)
