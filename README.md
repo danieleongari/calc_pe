@@ -1,4 +1,5 @@
-# CalPE: compute the Parasitic Energy for CO<sub>2</sub> capture
+# calc_pe
+## compute the Parasitic Energy for CO<sub>2</sub> capture
 
 ### References
 * [Evaluating different classes of porous materials for carbon capture (2014)](http://doi.org/10.1039/C4EE02636E)
@@ -17,7 +18,7 @@
 * numpy
 * pandas
 
-### Install 
+### Install
 ```
 git clone https://github.com/danieleongari/calc_pe.git
 cd calc_pe
