@@ -17,10 +17,17 @@
 * numpy
 * pandas
 
+### Install 
+```
+git clone https://github.com/danieleongari/calc_pe
+cd calc_pe
+pip install .
+```
+
 ### Input and run
 
 ```
-$ calPE.py Mg-MOF74 coal -rho 914.88 -cp 896 -process TPSA -datapath ./test/
+$ run_pe Mg-MOF74 coal -rho 914.88 -cp 896 -process TPSA -datapath ./tests/
 ```
 
 See the `--help` for the input description.
@@ -49,8 +56,8 @@ see the tests as example.
 
 * For testing the minimal inputs are:
 ```
-$ calPE.py Mg-MOF74 coal
-$ calPE.py HKUST-1 coal
+$ run_pe Mg-MOF74 coal
+$ run_pe HKUST-1 coal
 ```
 
 ### Output
@@ -78,7 +85,7 @@ A warning is printed in case of negative working capacity
 for all the tested desorption conditions, e.g.,For example:
 
 ```
-$ calPE.py HKUST-1 air
+$ run_pe HKUST-1 air
 HKUST-1: Unfeasible process!
 ```
 
