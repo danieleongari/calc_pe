@@ -261,42 +261,43 @@ def mainPE(struc, gasin, rho, vf, process, cp, yd, eleff, opt, T_iso, iso_df):
         data_opt = data[np.argmax(data.T[9])]
     logging.debug("data_opt:")
     logging.debug(data_opt)
-    results_dict = {}
-    results_dict['process_feasible'] = True
-    results_dict['PE'] = data_opt[0]/1e6
-    results_dict['PE_units'] = 'MJ/kg'
-    results_dict['PE_descr'] = 'parassitic energy at optimal process conditions'
-    results_dict['P'] = data_opt[1]/101325.0
-    results_dict['P_units'] = 'bar'
-    results_dict['PE_descr'] = 'desorption pressure'
-    results_dict['T'] = data_opt[2]
-    results_dict['T_units'] = 'K'
-    results_dict['T_descr'] = 'desorption temperature'
-    results_dict['eloss'] = data_opt[0]/1e3 / totE
-    results_dict['eloss_units'] = 'kJ/kJ'
-    results_dict['eloss_descr'] = 'fraction of electricity loss (np.nan for "air")'
-    results_dict['Qteff'] = data_opt[3]/1e6
-    results_dict['Qteff_units'] = 'MJ/kgCO2'
-    results_dict['Qteff_descr'] = 'heat requirement'
-    results_dict['Qt'] = data_opt[6]/1e6
-    results_dict['Qt_units'] = 'MJ/kgCO2'
-    results_dict['Qt_descr'] = 'Not-effective heat requirement'
-    results_dict['Qs'] = data_opt[4]/1e6
-    results_dict['Qs_units'] = 'MJ/kgCO2'
-    results_dict['Qs_descr'] = 'Sensible heat'
-    results_dict['Qd'] = data_opt[5]/1e6
-    results_dict['Qd_units'] = 'MJ/kgCO2'
-    results_dict['Qd_descr'] = 'desorption enthalpy'
-    results_dict['Wcomp'] = data_opt[7]/1e6
-    results_dict['Wcomp_units'] = 'MJ/kgCO2'
-    results_dict['Wcomp_descr'] = 'compression work'
-    results_dict['WCv'] = data_opt[8]
-    results_dict['WCv_units'] = 'kgCO2/m3'
-    results_dict['WCv_descr'] = 'volumetric working capacity'
-    results_dict['WCg'] = data_opt[8]/ms
-    results_dict['WCg_units'] = 'kgCO2/kg'
-    results_dict['WCg_descr'] = 'gravimetric working capacity'
-    results_dict['Pur'] = data_opt[9]
-    results_dict['Pur_units'] = 'mol/mol'
-    results_dict['Pur_descr'] = 'fraction of CO2 purity'
+    results_dict = {
+        'process_feasible': True,
+        'PE': data_opt[0]/1e6,
+        'PE_units': 'MJ/kg',
+        'PE_descr': 'parassitic energy at optimal process conditions',
+        'P': data_opt[1]/101325.0,
+        'P_units': 'bar',
+        'PE_descr': 'desorption pressure',
+        'T': data_opt[2],
+        'T_units': 'K',
+        'T_descr': 'desorption temperature',
+        'eloss': data_opt[0]/1e3 / totE,
+        'eloss_units': 'kJ/kJ',
+        'eloss_descr': 'fraction of electricity loss (np.nan for air)',
+        'Qteff': data_opt[3]/1e6,
+        'Qteff_units': 'MJ/kgCO2',
+        'Qteff_descr': 'heat requirement',
+        'Qt': data_opt[6]/1e6,
+        'Qt_units': 'MJ/kgCO2',
+        'Qt_descr': 'Not-effective heat requirement',
+        'Qs': data_opt[4]/1e6,
+        'Qs_units': 'MJ/kgCO2',
+        'Qs_descr': 'Sensible heat',
+        'Qd': data_opt[5]/1e6,
+        'Qd_units': 'MJ/kgCO2',
+        'Qd_descr': 'desorption enthalpy',
+        'Wcomp': data_opt[7]/1e6,
+        'Wcomp_units': 'MJ/kgCO2',
+        'Wcomp_descr': 'compression work',
+        'WCv': data_opt[8],
+        'WCv_units': 'kgCO2/m3',
+        'WCv_descr': 'volumetric working capacity',
+        'WCg': data_opt[8]/ms,
+        'WCg_units': 'kgCO2/kg',
+        'WCg_descr': 'gravimetric working capacity',
+        'Pur': data_opt[9],
+        'Pur_units': 'mol/mol',
+        'Pur_descr': 'fraction of CO2 purity',
+    }
     return results_dict
