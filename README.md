@@ -19,7 +19,7 @@
 
 ### Install 
 ```
-git clone https://github.com/danieleongari/calc_pe
+git clone https://github.com/danieleongari/calc_pe.git
 cd calc_pe
 pip install .
 ```
