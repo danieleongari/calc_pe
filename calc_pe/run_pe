@@ -4,7 +4,7 @@ from glob import glob
 import argparse, logging
 from datetime import datetime
 import pandas as pd
-
+from calc_pe import mainPE
 
 parser = argparse.ArgumentParser(
   description="Program to compute the parasitic energy from single component isotherms",
