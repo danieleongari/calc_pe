@@ -99,7 +99,7 @@ elif os.path.exists(os.path.join(args.datapath, args.struc, "rho.csv")):
     with open(os.path.join(args.datapath, args.struc, "rho.csv")) as f:
         rho = float(f.readline().strip()) #density in kg/m3
 else:
-    sys.exit('WARING: density of the framework unknown!')
+    sys.exit('WARNING: density of the framework unknown!')
 
 if args.cp != None:
     cp = args.cp
@@ -114,9 +114,15 @@ T_iso={}
 iso_df={}
 for m in ['CO_2','N_2']:
   iso_dir = os.path.join(args.datapath, args.struc, m) # dir containing isotherms
-  iso_file = glob(os.path.join(iso_dir, '*.csv'))[0] # .csv files for the isotherms
-  T_iso[m] = int(os.path.splitext(os.path.basename(iso_file))[0][:-1]) # read temperature of the isotherm from the filename
-  iso_df[m] = pd.read_csv(iso_file, sep=' ') #values of the isotherm
+  iso_files = glob(os.path.join(iso_dir, '*.csv'))
+  if len(iso_files) == 0:
+      sys.exit('WARNING: no isotherm found in {}!'.format(iso_dir))
+  elif len(iso_files) > 1:
+      sys.exit('WARNING: more than one file in {}; keep only one!'.format(iso_dir))
+  else:
+      iso_file = iso_files[0] # .csv files for the isotherms
+      T_iso[m] = int(os.path.splitext(os.path.basename(iso_file))[0][:-1]) # read temperature of the isotherm from the filename
+      iso_df[m] = pd.read_csv(iso_file, sep=' ') #values of the isotherm
 
 # Run the main function
 res = mainPE(struc=args.struc,

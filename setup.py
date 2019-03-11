@@ -19,5 +19,5 @@ if __name__ == '__main__':
                           'pandas>=0.24.0',
                           'pyiast'
                          ],
-        scripts=["calc_pe/run_pe"],
+        scripts=["bin/calc_pe"],
         )
