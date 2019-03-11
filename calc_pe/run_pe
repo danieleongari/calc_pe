@@ -74,9 +74,9 @@ parser.add_argument(
         "-datapath",
         type=str,
         dest="datapath",
-        default="./test/",
+        default="./",
         help="Path containing the isotherms in .csv format.\n" +
-             "(default: ./test/)")
+             "(default: ./)")
 parser.add_argument(
        "-l",
        "--log",
