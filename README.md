@@ -69,7 +69,7 @@ Mg-MOF74: PE(MJ/kg)= 0.867: Pd(bar)= 0.01 Td(K)= 333.0 EL(-) = 0.235 Q(MJ/kg)= 0
 ```
 
 * Name of the structure
-* `PE(MJ/kg)`: parasitic energy (Note: PE=Q+Wcomp)
+* `PE(MJ/kg)`: parasitic energy per kg of CO<sub>2</sub> (Note: PE=Q+Wcomp)
 * `Pd(bar)`: optimal desorption pressure
 * `Td(K)`: optimal desorption temperature
 * `EL(J/J)`: fraction of electricity loss
@@ -84,7 +84,7 @@ considering `-vf` void fraction.
 * `pur(mol/mol)`: molar fraction of CO<sub>2</sub> final purity (-)
 
 A warning is printed in case of negative working capacity
-for all the tested desorption conditions, e.g.,For example:
+for all the tested desorption conditions, e.g.:
 
 ```
 $ calc_pe HKUST-1 air
@@ -110,8 +110,8 @@ CO<sub>2</sub> over the sum of the working capacities of both CO<sub>2</sub>
 and N<sub>2</sub>.
 
 * By default the program prints the results for optimal PE (i.e., the lowest).
-However, one can search for other optimal parameters by using the `-opt` command.
-For example, lowest `Q` if he is not interest in compressing the CO<sub>2</sub>,
-or higher purity or working capacity (`WC`) or CO<sub>2</sub> final purity (`pur`).
-*Note that these may not be anymore optimization problems, giving just the max/min
-T and P conditions.*
+However, one can search for other optimal parameters by using the `-opt` command:
+lowest `Q` if he is not interest in compressing the CO<sub>2</sub>,
+highest working capacity (`WC`) or highest CO<sub>2</sub> final purity (`pur`).
+*Note that these may not be anymore optimization problems, returning just
+the max/min T and P conditions.*
