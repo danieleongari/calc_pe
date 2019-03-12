@@ -5,12 +5,13 @@ import argparse, logging
 from datetime import datetime
 import pandas as pd
 from calc_pe import mainPE
+from calc_pe.utils import printPE
 
 parser = argparse.ArgumentParser(
   description="Program to compute the parasitic energy from single component isotherms",
   formatter_class=argparse.RawTextHelpFormatter)
 parser.add_argument(
-        "struc",
+        "adsorbent_name",
         help="Name of the adsorbent framework.")
 parser.add_argument(
         "gasin",
@@ -23,7 +24,7 @@ parser.add_argument(
         dest="rho",
         default=None,
         help="Density of the adsorbent framework (kg/m3).\n" +
-             "(default: value readen from datapath/struc/rho.csv)")
+             "(default: value readen from datapath/adsorbent_name/rho.csv)")
 parser.add_argument(
         "-vf",
         type=float,
@@ -46,7 +47,7 @@ parser.add_argument(
         help="Choice for the heat adsorption of the adsorbent:\n" +
              "for nanoporous materials it should range between 761.0\n" +
              "and 1210.0 J/kg/K.\n" +
-             "(default: readen from datapath/struc/cp.csv if present,\n" +
+             "(default: readen from datapath/adsorbent_name/cp.csv if present,\n" +
              "          otherwise 985.0 J/kg/K, the average)")
 parser.add_argument(
         "-yd",
@@ -86,7 +87,7 @@ args = parser.parse_args()
 if args.log:
   # Set up the debug .log file
   now = datetime.now().isoformat()
-  logfile = 'calPE_%s_%s.log' % (args.struc, now)
+  logfile = 'calPE_%s_%s.log' % (args.adsorbent_name, now)
   logging.basicConfig(
     filename=logfile, format='%(message)s', level=logging.DEBUG
   )
@@ -95,16 +96,16 @@ logging.debug(args)
 # Convert varables into the arguments to feed the mainPE function
 if args.rho != None:
     rho = args.rho
-elif os.path.exists(os.path.join(args.datapath, args.struc, "rho.csv")):
-    with open(os.path.join(args.datapath, args.struc, "rho.csv")) as f:
+elif os.path.exists(os.path.join(args.datapath, args.adsorbent_name, "rho.csv")):
+    with open(os.path.join(args.datapath, args.adsorbent_name, "rho.csv")) as f:
         rho = float(f.readline().strip()) #density in kg/m3
 else:
     sys.exit('WARNING: density of the framework unknown!')
 
 if args.cp != None:
     cp = args.cp
-elif os.path.exists(os.path.join(args.datapath, args.struc, "cp.csv")):
-    with open(os.path.join(args.datapath, args.struc, "cp.csv")) as f:
+elif os.path.exists(os.path.join(args.datapath, args.adsorbent_name, "cp.csv")):
+    with open(os.path.join(args.datapath, args.adsorbent_name, "cp.csv")) as f:
       cp = float(f.readline().strip()) #cp in J/kg/K
 else:
     cp = 948.0 #average for MOFs
@@ -113,7 +114,7 @@ else:
 T_iso={}
 iso_df={}
 for m in ['CO_2','N_2']:
-  iso_dir = os.path.join(args.datapath, args.struc, m) # dir containing isotherms
+  iso_dir = os.path.join(args.datapath, args.adsorbent_name, m) # dir containing isotherms
   iso_files = glob(os.path.join(iso_dir, '*.csv'))
   if len(iso_files) == 0:
       sys.exit('WARNING: no isotherm found in {}!'.format(iso_dir))
@@ -124,9 +125,8 @@ for m in ['CO_2','N_2']:
       T_iso[m] = int(os.path.splitext(os.path.basename(iso_file))[0][:-1]) # read temperature of the isotherm from the filename
       iso_df[m] = pd.read_csv(iso_file, sep=' ') #values of the isotherm
 
-# Run the main function
-res = mainPE(struc=args.struc,
-             gasin=args.gasin,
+# Run the main function, and print results
+res = mainPE(gasin=args.gasin,
              rho=rho,
              vf=args.vf,
              process=args.process,
@@ -137,21 +137,4 @@ res = mainPE(struc=args.struc,
              T_iso=T_iso,
              iso_df=iso_df,
             )
-
-# Convert results into a single-line string and print it
-if res['process_feasible']:
-    results_str="{:s}: ".format(args.struc)
-    results_str+="PE(MJ/kg)= {:.3f}: ".format(res['PE'])
-    results_str+="Pd(bar)= {:.2f} ".format(res['P'])
-    results_str+="Td(K)= {:.1f} ".format(res['T'])
-    results_str+="EL(J/J)= {:.3f} ".format(res['eloss'])
-    results_str+="Q(MJ/kg)= {:.3f} ".format(res['Qteff'])
-    results_str+="Wcomp(MJ/kg)= {:.3f} ".format(res['Wcomp'])
-    results_str+="WCv(kg/m3)= {:.3f} ".format(res['WCv'])
-    results_str+="WCg(kg/kg)= {:.3f} ".format(res['WCg'])
-    results_str+="pur(mol/mol)= {:.3f}".format(res['Pur'])
-else:
-    results_str="{:s}: Unfeasible process!".format(args.struc)
-    
-logging.debug(results_str)
-print(results_str)
+printPE(args.adsorbent_name,res)

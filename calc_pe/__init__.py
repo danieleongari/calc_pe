@@ -154,11 +154,10 @@ def totalPE(Pa, Pd, Ta, Td, ya, yd, iso_Ta, iso_Td, cp, ms, vf, eleff, qa, wcvf_
   PE = Qteff + Wcomp  # J/kgCO2
   return PE, Qteff, Qt, Qseff, Qdeff, Wcomp, WCv, pur
 
-def mainPE(struc, gasin, rho, vf, process, cp, yd, eleff, opt, T_iso, iso_df):
+def mainPE(gasin, rho, vf, process, cp, yd, eleff, opt, T_iso, iso_df):
     """Main script to compute CO2 parasitic energy from single component
     CO2 and N2 isotherms
 
-    :str struc: name of the adsorbent
     :str gasin: choice of the input mixture
     :float rho: density of the adsorbent (kg/m3)
     :float vf:  void fraction of the bed, e.g., 0.35
@@ -167,8 +166,8 @@ def mainPE(struc, gasin, rho, vf, process, cp, yd, eleff, opt, T_iso, iso_df):
     :float yd: target CO2 purity, e.g., 0.99
     :str eleff: choice of the method to compute electr. eff., e.g., 'carnot'
     :str opt: choice of the parameter to optimize for the process, e.g., 'PE'
-    :[float,float] T_iso: temperature of the used isotherms for CO2 and N2
-    :[df,df] iso_df: dataframe with isotherms for CO2 and N2, see examples
+    :[float,float] T_iso: temperatures of the used isotherms for CO2 and N2
+    :[df,df] iso_df: dataframes with isotherms for CO2 and N2, see examples
     """
 
     # Initialize calculation

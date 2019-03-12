@@ -68,7 +68,7 @@ In the output, the program prints:
 Mg-MOF74: PE(MJ/kg)= 0.867: Pd(bar)= 0.01 Td(K)= 333.0 EL(-) = 0.235 Q(MJ/kg)= 0.124 Wcomp(MJ/kg)= 0.743 WCv(kg/m3)= 114.655 WCg(kg/kg)= 0.193 pur(-)= 0.967
 ```
 
-* Name of the structure
+* Name of the adsorbent
 * `PE(MJ/kg)`: parasitic energy per kg of CO<sub>2</sub> (Note: PE=Q+Wcomp)
 * `Pd(bar)`: optimal desorption pressure
 * `Td(K)`: optimal desorption temperature
