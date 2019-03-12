@@ -1,3 +1,4 @@
+import sys
 import logging
 import pyiast
 import numpy as np
@@ -150,6 +151,8 @@ def totalPE(Pa, Pd, Ta, Td, ya, yd, iso_Ta, iso_Td, cp, ms, vf, eleff, qa, wcvf_
       Qteff = Qt * (-0.08037 + 0.002326 * (Td - 273 + 10))
       Qseff = Qs * (-0.08037 + 0.002326 * (Td - 273 + 10))
       Qdeff = Qd * (-0.08037 + 0.002326 * (Td - 273 + 10))
+  else:
+      sys.exit('WARNING: eleff parameter is not in [carnot,linear]')
   logging.debug("Qt = {:.3e}, Qteff = {:.3e}".format(Qt, Qteff))
   PE = Qteff + Wcomp  # J/kgCO2
   return PE, Qteff, Qt, Qseff, Qdeff, Wcomp, WCv, pur
@@ -166,8 +169,8 @@ def mainPE(gasin, rho, vf, process, cp, yd, eleff, opt, T_iso, iso_df):
     :float yd: target CO2 purity, e.g., 0.99
     :str eleff: choice of the method to compute electr. eff., e.g., 'carnot'
     :str opt: choice of the parameter to optimize for the process, e.g., 'PE'
-    :[float,float] T_iso: temperatures of the used isotherms for CO2 and N2
-    :[df,df] iso_df: dataframes with isotherms for CO2 and N2, see examples
+    :{'CO_2': float,'N_2': float} T_iso: temperatures of the used isotherms
+    :{'CO_2': df,'N_2': df} iso_df: dataframes with isotherms, see examples
     """
 
     # Initialize calculation
@@ -217,7 +220,8 @@ def mainPE(gasin, rho, vf, process, cp, yd, eleff, opt, T_iso, iso_df):
     elif process == 'TPSA':
         Td_range = np.arange(Td_min,Td_max,Td_step)
         Pd_range = np.arange(Pd_min,Pd_max,Pd_step)
-
+    else:
+        sys.exit('WARNING: process parameter is not in [PSA,TSA,TPSA]')
     # Compute the PE at different Td, Pd
     data = [] # collect all the data at different Pd, Td
     qa = {}
@@ -258,6 +262,8 @@ def mainPE(gasin, rho, vf, process, cp, yd, eleff, opt, T_iso, iso_df):
         data_opt = data[np.argmax(data.T[8])]
     elif opt == "pur":
         data_opt = data[np.argmax(data.T[9])]
+    else:
+        sys.exit('WARNING: opt parameter is not in [PE,Q,WC,pur]')
     logging.debug("data_opt:")
     logging.debug(data_opt)
     results_dict = {
