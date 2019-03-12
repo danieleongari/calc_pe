@@ -5,8 +5,8 @@ def printPE(adsorbent_name, res):
     if res['process_feasible']:
         results_str="{:s}: ".format(adsorbent_name)
         results_str+="PE(MJ/kg)= {:.3f}: ".format(res['PE'])
-        results_str+="Pd(bar)= {:.2f} ".format(res['P'])
-        results_str+="Td(K)= {:.1f} ".format(res['T'])
+        results_str+="Pd(bar)= {:.2f} ".format(res['Pd'])
+        results_str+="Td(K)= {:.1f} ".format(res['Td'])
         results_str+="EL(J/J)= {:.3f} ".format(res['eloss'])
         results_str+="Q(MJ/kg)= {:.3f} ".format(res['Qteff'])
         results_str+="Wcomp(MJ/kg)= {:.3f} ".format(res['Wcomp'])
