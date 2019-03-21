@@ -87,7 +87,7 @@ args = parser.parse_args()
 if args.log:
   # Set up the debug .log file
   now = datetime.now().isoformat()
-  logfile = 'calPE_%s_%s.log' % (args.adsorbent_name, now)
+  logfile = 'calcPE_%s_%s.log' % (args.adsorbent_name, now)
   logging.basicConfig(
     filename=logfile, format='%(message)s', level=logging.DEBUG
   )
