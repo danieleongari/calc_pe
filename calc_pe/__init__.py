@@ -273,7 +273,7 @@ def mainPE(gasin, rho, vf, process, cp, yd, eleff, opt, T_iso, iso_df):
         'PE_descr': 'parassitic energy at optimal process conditions',
         'Pd': data_opt[1]/101325.0,
         'Pd_units': 'bar',
-        'PE_descr': 'desorption pressure',
+        'Pd_descr': 'desorption pressure',
         'Td': data_opt[2],
         'Td_units': 'K',
         'Td_descr': 'desorption temperature',
