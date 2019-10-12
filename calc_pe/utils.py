@@ -1,7 +1,7 @@
 import logging
 
-def printPE(adsorbent_name, res):
-    """ Combine PE results into a single line string and print them on screen """
+def get_PE_results_string(adsorbent_name, res):
+    """Combine PE results into a single line string."""
     if res['process_feasible']:
         results_str="{:s}: ".format(adsorbent_name)
         results_str+="PE(MJ/kg)= {:.3f} ".format(res['PE'])
@@ -17,5 +17,10 @@ def printPE(adsorbent_name, res):
         results_str="{:s}: Unfeasible process!".format(adsorbent_name)
     # Print in the log file
     logging.debug(results_str)
-    # Print on screen
+
+    return results_str
+
+def printPE(adsorbent_name, res):
+    """Print PE_results_string on screen."""
+    results_str = get_PE_results_string(adsorbent_name, res)
     print(results_str)
