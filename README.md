@@ -118,6 +118,10 @@ If you use calc_pe, please consider citing:
 * [Evaluating different classes of porous materials for carbon capture (2014)](http://doi.org/10.1039/C4EE02636E)
 * [In silico screening of carbon-capture materials (2012)](http://dx.doi.org/10.1038/nmat3336)
 
+This program has been used in:
+
+* [Building a Consistent and Reproducible Database for Adsorption Evaluation in Covalent–Organic Frameworks](https://pubs.acs.org/doi/abs/10.1021/acscentsci.9b00619)
+
 ### Authors
 * Johanna M. Huck
 * Li-Chiang Lin
