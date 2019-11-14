@@ -99,7 +99,7 @@ def totalQ(Ta, Td, Pa, Pd, ya, yd, iso_Ta, iso_Td, cp, vf, ms, qa, wcvf_a,
     wcvf_d = {}
     wcvf_d['CO_2'] = wcvf(yd, Td, Pd, vf, ms)
     wcvf_d['N_2'] = wcvf(1 - yd, Td, Pd, vf, ms)
-    qd, = {}
+    qd = {}
     # gas uptake @ desorption
     qd['CO_2'], qd['N_2'] = pyiast.iast(
         np.array([yd, 1 - yd]) * Pd,

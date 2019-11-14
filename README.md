@@ -41,6 +41,7 @@ see the tests as example.
 
 * For testing the minimal inputs are:
 ```
+$ cd tests/
 $ calc_pe Mg-MOF74 coal
 $ calc_pe HKUST-1 coal
 ```
