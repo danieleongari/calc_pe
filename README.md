@@ -1,21 +1,6 @@
-# calc_pe: compute the Parasitic Energy for CO<sub>2</sub> capture
+# calc_pe
 
-### References
-* [Evaluating different classes of porous materials for carbon capture (2014)](http://doi.org/10.1039/C4EE02636E)
-* [In silico screening of carbon-capture materials (2012)](http://dx.doi.org/10.1038/nmat3336)
-
-### Authors
-* Johanna M. Huck
-* Li-Chiang Lin
-* Cory M. Simon
-* Adam Berger
-* Daniele Ongari (restyling, December 2018)
-
-### Dependencies
-
-* [pyIAST](https://github.com/CorySimon/pyIAST)
-* numpy
-* pandas
+calc_pe computes the parasitic energy for CO<sub>2</sub> capture from CO<sub>2</sub> and N<sub>2</sub>  isotherms.
 
 ### Install
 ```
@@ -30,9 +15,9 @@ pip install .
 $ calc_pe Mg-MOF74 coal -rho 914.88 -cp 896 -process TPSA -datapath ./tests/
 ```
 
-See the `--help` for the input description.
+See `calc_pe --help` for the input description.
 
-Use `--log` for printing the debug log file.
+Use `calc_pe --log` for printing the debug log file.
 
 #### NB:
 
@@ -56,6 +41,7 @@ see the tests as example.
 
 * For testing the minimal inputs are:
 ```
+$ cd tests/
 $ calc_pe Mg-MOF74 coal
 $ calc_pe HKUST-1 coal
 ```
@@ -115,3 +101,26 @@ lowest `Q` if he is not interest in compressing the CO<sub>2</sub>,
 highest working capacity (`WC`) or highest CO<sub>2</sub> final purity (`pur`).
 *Note that these may not be anymore optimization problems, returning just
 the max/min T and P conditions.*
+
+
+### Dependencies
+
+calc_pe uses:
+
+* [pyIAST](https://github.com/CorySimon/pyIAST)
+* numpy
+* pandas
+
+### References
+
+If you use calc_pe, please consider citing:
+
+* [Evaluating different classes of porous materials for carbon capture (2014)](http://doi.org/10.1039/C4EE02636E)
+* [In silico screening of carbon-capture materials (2012)](http://dx.doi.org/10.1038/nmat3336)
+
+### Authors
+* Johanna M. Huck
+* Li-Chiang Lin
+* Cory M. Simon
+* Adam Berger
+* Daniele Ongari (restyling, December 2018)
