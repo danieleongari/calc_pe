@@ -15,7 +15,7 @@ if __name__ == '__main__':
         url='https://github.com/danieleongari/calc_pe',
         license='MIT',
         classifiers=['Programming Language :: Python'],
-        version='0.1.0',
+        version='1.0.1',
         install_requires=['numpy', 'pandas>=0.24.0', 'pyiast'],
         scripts=['bin/calc_pe'],
     )
