@@ -108,7 +108,7 @@ elif os.path.exists(os.path.join(args.datapath, args.adsorbent_name, "cp.csv")):
     with open(os.path.join(args.datapath, args.adsorbent_name, "cp.csv")) as f:
       cp = float(f.readline().strip()) #cp in J/kg/K
 else:
-    cp = 948.0 #average for MOFs
+    cp = 985.0 #average for MOFs as estimated in 10.1039/C4EE02636E
 
 
 T_iso={}
