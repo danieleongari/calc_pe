@@ -1,6 +1,6 @@
-# calc_pe
+# Parasitic Energy Calculator
 
-calc_pe computes the parasitic energy for CO<sub>2</sub> capture from CO<sub>2</sub> and N<sub>2</sub>  isotherms.
+This package `calc_pe` computes the parasitic energy for CO<sub>2</sub> capture from CO<sub>2</sub> and N<sub>2</sub>  isotherms.
 
 ### Install
 ```
